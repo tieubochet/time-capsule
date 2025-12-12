@@ -3,18 +3,18 @@
 import { useState, useEffect } from "react";
 import { AppConfig, UserSession, showConnect, openContractCall } from "@stacks/connect";
 import { StacksTestnet, StacksMainnet } from "@stacks/network";
-// SỬA LỖI 1: Đổi uint -> uintCV, stringUtf8 -> stringUtf8CV
-import { uintCV, stringUtf8CV } from "@stacks/transactions";
+// Import thêm Pc (PostCondition builder) và PostConditionMode
+import { uintCV, stringUtf8CV, Pc, PostConditionMode } from "@stacks/transactions";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [txId, setTxId] = useState("");
-  const [networkType, setNetworkType] = useState("mainnet"); // Switch to 'mainnet' if deploying to mainnet
+  const [networkType, setNetworkType] = useState("mainnet"); 
 
-  // ⚠️ CRITICAL CONFIGURATION: REPLACE THIS WITH YOUR DEPLOYED CONTRACT ADDRESS
-  const CONTRACT_ADDRESS = "SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8"; 
+  // ⚠️ ĐỪNG QUÊN THAY ĐỊA CHỈ CONTRACT CỦA BẠN VÀO ĐÂY
+  const CONTRACT_ADDRESS = "SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8.time-vault"; 
   const CONTRACT_NAME = "time-vault";
 
   const appConfig = new AppConfig(["store_write", "publish_data"]);
@@ -23,7 +23,6 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     if (userSession.isUserSignedIn()) {
-      // Get the wallet address corresponding to the selected network
       const userData = userSession.loadUserData();
       setUser(networkType === "mainnet" ? userData.profile.stxAddress.mainnet : userData.profile.stxAddress.testnet);
     }
@@ -53,36 +52,42 @@ export default function Home() {
     setStatus("⏳ Fetching current block info...");
 
     try {
-      // 1. Determine API URL based on network
       const apiUrl = networkType === "mainnet" 
         ? "https://api.hiro.so" 
         : "https://api.testnet.hiro.so";
         
-      // 2. Fetch current Block Height from API
       const response = await fetch(`${apiUrl}/v2/info`);
       const data = await response.json();
       const currentBlock = data.burn_block_height;
 
-      // 3. Calculate unlock height (Lock for +2 blocks ~ approx 20 mins)
+      // Lock for +2 blocks
       const unlockHeight = currentBlock + 2;
+      const amountMicroStx = 100000; // 0.1 STX
 
       setStatus(`🔒 Sending lock transaction for block #${unlockHeight}...`);
 
-      // 4. Select the appropriate Stacks network
       const network = networkType === "mainnet" ? new StacksMainnet() : new StacksTestnet();
 
-      // 5. Call Smart Contract
+      // --- SỬA LỖI Ở ĐÂY: TẠO POST-CONDITION ---
+      // "Tôi cho phép ví (user) gửi chính xác 1 STX"
+      const postCondition = Pc.principal(user)
+        .willSendEq(amountMicroStx)
+        .ustx();
+
       await openContractCall({
         network,
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: "create-capsule",
         functionArgs: [
-          // SỬA LỖI 2: Dùng uintCV và stringUtf8CV
-          uintCV(unlockHeight),          // Arg 1: Unlock Block Height
-          uintCV(1000000),               // Arg 2: Amount (1 STX)
-          stringUtf8CV("Universal Code") // Arg 3: Message
+          uintCV(unlockHeight),          
+          uintCV(amountMicroStx),               
+          stringUtf8CV("Universal Code") 
         ],
+        // Thêm dòng này để cấp quyền chuyển tiền
+        postConditionMode: PostConditionMode.Deny, // Chế độ an toàn: Chỉ cho phép đúng điều kiện bên dưới
+        postConditions: [postCondition],           // Danh sách điều kiện
+        
         onFinish: (data) => {
           setTxId(data.txId);
           setStatus("✅ Transaction broadcasted successfully!");
@@ -97,7 +102,6 @@ export default function Home() {
     }
   };
 
-  // Prevent hydration errors by ensuring component is mounted
   if (!mounted) return null;
 
   return (
