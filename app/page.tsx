@@ -14,7 +14,7 @@ export default function Home() {
   const [networkType, setNetworkType] = useState("mainnet"); // Switch to 'mainnet' if deploying to mainnet
 
   // ⚠️ CRITICAL CONFIGURATION: REPLACE THIS WITH YOUR DEPLOYED CONTRACT ADDRESS
-  const CONTRACT_ADDRESS = "SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8.time-vault"; 
+  const CONTRACT_ADDRESS = "SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8"; 
   const CONTRACT_NAME = "time-vault";
 
   const appConfig = new AppConfig(["store_write", "publish_data"]);
