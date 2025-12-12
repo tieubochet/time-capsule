@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { AppConfig, UserSession, showConnect, openContractCall } from "@stacks/connect";
 import { StacksTestnet, StacksMainnet } from "@stacks/network";
-import { uint, stringUtf8 } from "@stacks/transactions";
+// SỬA LỖI 1: Đổi uint -> uintCV, stringUtf8 -> stringUtf8CV
+import { uintCV, stringUtf8CV } from "@stacks/transactions";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -77,9 +78,10 @@ export default function Home() {
         contractName: CONTRACT_NAME,
         functionName: "create-capsule",
         functionArgs: [
-          uint(unlockHeight),          // Arg 1: Unlock Block Height
-          uint(1000000),               // Arg 2: Amount (1 STX)
-          stringUtf8("Universal Code") // Arg 3: Message
+          // SỬA LỖI 2: Dùng uintCV và stringUtf8CV
+          uintCV(unlockHeight),          // Arg 1: Unlock Block Height
+          uintCV(1000000),               // Arg 2: Amount (1 STX)
+          stringUtf8CV("Universal Code") // Arg 3: Message
         ],
         onFinish: (data) => {
           setTxId(data.txId);
