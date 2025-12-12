@@ -14,7 +14,7 @@ export default function Home() {
   const [networkType, setNetworkType] = useState("mainnet"); 
 
   // ⚠️ ĐỪNG QUÊN THAY ĐỊA CHỈ CONTRACT CỦA BẠN VÀO ĐÂY
-  const CONTRACT_ADDRESS = "SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8.time-vault"; 
+  const CONTRACT_ADDRESS = "SPHMWZQ1KW03KHYPADC81Q6XXS284S7QCHRAS3A8"; 
   const CONTRACT_NAME = "time-vault";
 
   const appConfig = new AppConfig(["store_write", "publish_data"]);
@@ -182,7 +182,7 @@ export default function Home() {
                 boxShadow: "0 4px 6px rgba(85, 70, 255, 0.2)"
               }}
             >
-              🔒 Lock 1 STX (2 Blocks)
+              🔒 Lock 0.1 STX (2 Blocks)
             </button>
 
             {status && (
